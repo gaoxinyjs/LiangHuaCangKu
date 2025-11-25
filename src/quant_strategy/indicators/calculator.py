@@ -1,22 +1,22 @@
- """Indicator calculation helpers built on top of pandas."""
+"""Indicator calculation helpers built on top of pandas."""
 
- from __future__ import annotations
+from __future__ import annotations
 
- import pandas as pd
+import pandas as pd
 
- from quant_strategy.core.config import IndicatorConfig
- from quant_strategy.core.models import IndicatorSet, OHLCV
+from quant_strategy.core.config import IndicatorConfig
+from quant_strategy.core.models import IndicatorSet, OHLCV
 
 
- class IndicatorCalculator:
-     """Calculate MA/EMA/MACD/RSI and volume ratios on OHLCV series."""
+class IndicatorCalculator:
+    """Calculate MA/EMA/MACD/RSI and volume ratios on OHLCV series."""
 
-     def __init__(self, config: IndicatorConfig) -> None:
-         self._cfg = config
+    def __init__(self, config: IndicatorConfig) -> None:
+        self._cfg = config
 
-     def calculate(self, candles: list[OHLCV]) -> list[IndicatorSet]:
-         if not candles:
-             return []
+    def calculate(self, candles: list[OHLCV]) -> list[IndicatorSet]:
+        if not candles:
+            return []
 
         df = pd.DataFrame(
             {
@@ -29,7 +29,9 @@
         ).set_index("timestamp")
 
         ma = {window: df["close"].rolling(window).mean() for window in self._cfg.ma_windows}
-        ema = {window: df["close"].ewm(span=window, adjust=False).mean() for window in self._cfg.ema_windows}
+        ema = {
+            window: df["close"].ewm(span=window, adjust=False).mean() for window in self._cfg.ema_windows
+        }
 
         fast = df["close"].ewm(span=self._cfg.macd_fast, adjust=False).mean()
         slow = df["close"].ewm(span=self._cfg.macd_slow, adjust=False).mean()
