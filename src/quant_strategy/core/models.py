@@ -26,16 +26,19 @@
      volume: float
 
 
- @dataclass(slots=True)
- class IndicatorSet:
-     symbol: str
-     interval: str
-     timestamp: datetime
-     ma: Dict[int, float] = field(default_factory=dict)
-     ema: Dict[int, float] = field(default_factory=dict)
-     macd: Dict[str, float] = field(default_factory=dict)
-     rsi: Dict[int, float] = field(default_factory=dict)
-     volume_ratio: Optional[float] = None
+@dataclass(slots=True)
+class IndicatorSet:
+    symbol: str
+    interval: str
+    timestamp: datetime
+    close: float
+    volume: float
+    atr: Optional[float] = None
+    ma: Dict[int, float] = field(default_factory=dict)
+    ema: Dict[int, float] = field(default_factory=dict)
+    macd: Dict[str, float] = field(default_factory=dict)
+    rsi: Dict[int, float] = field(default_factory=dict)
+    volume_ratio: Optional[float] = None
 
 
  @dataclass(slots=True)
