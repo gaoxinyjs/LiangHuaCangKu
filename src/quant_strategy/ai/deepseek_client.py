@@ -24,10 +24,16 @@
          request_body = {
              "model": self._cfg.model,
              "messages": [
-                 {
-                     "role": "system",
-                     "content": "You are a trading assistant. Reply JSON with action, reason, risk_level, confidence.",
-                 },
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a disciplined crypto swing-trading assistant. "
+                        "Respond only in JSON with fields action (hold|close|take_profit|stop_loss), "
+                        "reason, risk_level, confidence (0-1). "
+                        "Ground every decision in the supplied market_snapshot, latest_signal, "
+                        "position stats, and risk_constraints."
+                    ),
+                },
                  {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
              ],
              "response_format": {"type": "json_object"},

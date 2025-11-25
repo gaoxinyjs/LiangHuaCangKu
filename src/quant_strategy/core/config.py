@@ -27,13 +27,15 @@
      history_limit: int = 500
 
 
- class IndicatorConfig(BaseModel):
-     macd_fast: int = 12
-     macd_slow: int = 26
-     macd_signal: int = 9
-     ma_windows: List[int] = Field(default_factory=lambda: [5, 20, 60])
-     ema_windows: List[int] = Field(default_factory=lambda: [12, 26])
-     rsi_windows: List[int] = Field(default_factory=lambda: [6, 14])
+
+class IndicatorConfig(BaseModel):
+    macd_fast: int = 12
+    macd_slow: int = 26
+    macd_signal: int = 9
+    ma_windows: List[int] = Field(default_factory=lambda: [5, 20, 60])
+    ema_windows: List[int] = Field(default_factory=lambda: [12, 26])
+    rsi_windows: List[int] = Field(default_factory=lambda: [6, 14])
+    atr_window: int = 14
 
 
  class AiConfig(BaseModel):
@@ -45,13 +47,17 @@
      retry_attempts: int = 3
 
 
- class RiskConfig(BaseModel):
-     leverage: float = 5.0
-     take_profit_pct: float = 0.06
-     stop_loss_pct: float = 0.03
-     confidence_buckets: List[float] = Field(default_factory=lambda: [0.05, 0.08, 0.10, 0.12, 0.15])
-     max_position_minutes: int = 120
-     forced_close_minutes_before_eod: int = 15
+
+class RiskConfig(BaseModel):
+    leverage: float = 5.0
+    take_profit_pct: float = 0.06
+    stop_loss_pct: float = 0.03
+    confidence_buckets: List[float] = Field(default_factory=lambda: [0.05, 0.08, 0.10, 0.12, 0.15])
+    max_position_minutes: int = 120
+    forced_close_minutes_before_eod: int = 15
+    use_atr_targets: bool = True
+    atr_take_profit_multiplier: float = 1.5
+    atr_stop_loss_multiplier: float = 1.0
 
 
  class SchedulerConfig(BaseModel):
