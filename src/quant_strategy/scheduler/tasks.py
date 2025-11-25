@@ -7,10 +7,11 @@ from typing import List, Optional
 
 from quant_strategy.ai.deepseek_client import DeepSeekClient
 from quant_strategy.core.config import Config
-from quant_strategy.core.models import Signal, TradeDirection
+from quant_strategy.core.models import Position, Signal, TradeDirection
 from quant_strategy.data.fetcher import DataFetcher
 from quant_strategy.execution.orders import OrderPlanner
 from quant_strategy.execution.state_machine import StrategyStateMachine
+from quant_strategy.execution.trade_executor import TradeExecutor
 from quant_strategy.indicators.calculator import IndicatorCalculator
 from quant_strategy.monitoring.logger import StrategyLogger
 from quant_strategy.signals.context import StrategyContextBuilder
@@ -29,6 +30,7 @@ class StrategyTasks:
         self._ai_client = DeepSeekClient(config.ai)
         self._state_machine = StrategyStateMachine(config.risk)
         self._logger = StrategyLogger()
+        self._trade_executor = TradeExecutor(self._state_machine, self._logger)
         self._context_builder = StrategyContextBuilder(config.risk)
 
     def run_data_cycle(self) -> None:
@@ -94,16 +96,7 @@ class StrategyTasks:
         position = self._order_planner.create_position(
             best, account_equity=10_000, price=entry_price, volatility=volatility
         )
-        self._state_machine.enter_position(position)
-        self._logger.success(
-            "Position planned",
-            details={
-                "symbol": position.symbol,
-                "size": f"{position.size:.4f}",
-                "entry_price": f"{position.entry_price:.2f}",
-            },
-        )
-        self._logger.log_position(position)
+        self._trade_executor.open_position(position)
 
     def run_minute_review(self) -> None:
         """1m job: let DeepSeek review current position and decide actions."""
@@ -125,6 +118,10 @@ class StrategyTasks:
             self._logger.info("No open position for review")
             return
 
+        if self._check_price_targets(position):
+            self._state_machine.mark_minute_review(now)
+            return
+
         payload = self._context_builder.build_ai_payload(position)
         self._logger.info(
             "Requesting AI evaluation",
@@ -138,10 +135,10 @@ class StrategyTasks:
         )
 
         if evaluation.action in {"close", "take_profit", "stop_loss"}:
-            self._state_machine.exit_position()
-            self._logger.warning(
-                "Position exit triggered",
-                details={"action": evaluation.action},
+            exit_price = self._fetch_latest_price(position.symbol) or position.entry_price
+            self._trade_executor.close_position(
+                reason=evaluation.action,
+                exit_price=exit_price,
             )
         self._state_machine.mark_minute_review(now)
 
@@ -165,3 +162,57 @@ class StrategyTasks:
         self._logger.info("Shutting down services")
         self._fetcher.close()
         self._ai_client.close()
+
+    def _fetch_latest_price(self, symbol: str) -> Optional[float]:
+        try:
+            candles = self._fetcher.fetch_klines(symbol, "1m", limit=1)
+        except Exception as exc:
+            self._logger.error(
+                "Failed to fetch latest price",
+                details={"symbol": symbol, "error": str(exc)},
+            )
+            return None
+        if not candles:
+            self._logger.warning(
+                "No intraday candles returned",
+                details={"symbol": symbol},
+            )
+            return None
+        return candles[-1].close
+
+    def _check_price_targets(self, position: Position) -> bool:
+        price = self._fetch_latest_price(position.symbol)
+        if price is None:
+            return False
+
+        if self._is_take_profit_hit(position, price):
+            self._logger.success(
+                "Take profit hit",
+                details={"symbol": position.symbol, "price": f"{price:.2f}"},
+            )
+            self._trade_executor.close_position(reason="take_profit", exit_price=price)
+            return True
+
+        if self._is_stop_loss_hit(position, price):
+            self._logger.warning(
+                "Stop loss hit",
+                details={"symbol": position.symbol, "price": f"{price:.2f}"},
+            )
+            self._trade_executor.close_position(reason="stop_loss", exit_price=price)
+            return True
+
+        return False
+
+    def _is_take_profit_hit(self, position: Position, price: float) -> bool:
+        if position.direction == TradeDirection.LONG:
+            return price >= position.take_profit
+        if position.direction == TradeDirection.SHORT:
+            return price <= position.take_profit
+        return False
+
+    def _is_stop_loss_hit(self, position: Position, price: float) -> bool:
+        if position.direction == TradeDirection.LONG:
+            return price <= position.stop_loss
+        if position.direction == TradeDirection.SHORT:
+            return price >= position.stop_loss
+        return False
