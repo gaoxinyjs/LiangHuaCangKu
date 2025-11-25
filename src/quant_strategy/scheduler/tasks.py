@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import List
+from typing import List, Optional
 
 from quant_strategy.ai.deepseek_client import DeepSeekClient
 from quant_strategy.core.config import Config
@@ -79,7 +79,7 @@ class StrategyTasks:
             self._state_machine.exit_position()
         self._state_machine.mark_minute_review(now)
 
-    def _select_best_signal(self, signals: List[Signal]) -> Signal | None:
+    def _select_best_signal(self, signals: List[Signal]) -> Optional[Signal]:
         signals = [s for s in signals if s.direction != TradeDirection.FLAT]
         if not signals:
             return None
@@ -89,7 +89,7 @@ class StrategyTasks:
         """This method should be replaced with live pricing integration."""
         return 100.0
 
-    def _extract_volatility(self, signal: Signal) -> float | None:
+    def _extract_volatility(self, signal: Signal) -> Optional[float]:
         atr_value = signal.metadata.get("atr")
         if isinstance(atr_value, (int, float)) and atr_value > 0:
             return float(atr_value)

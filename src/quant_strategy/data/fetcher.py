@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import List
+from typing import List, Optional
 
 import httpx
 from tenacity import Retrying, stop_after_attempt, wait_exponential
@@ -26,7 +26,7 @@ class DataFetcher:
             reraise=True,
         )
 
-    def fetch_klines(self, symbol: str, interval: str, limit: int | None = None) -> List[OHLCV]:
+    def fetch_klines(self, symbol: str, interval: str, limit: Optional[int] = None) -> List[OHLCV]:
         limit = limit or self._config.data.history_limit
         params = {"symbol": symbol, "interval": interval, "limit": limit}
         for attempt in self._retrying():

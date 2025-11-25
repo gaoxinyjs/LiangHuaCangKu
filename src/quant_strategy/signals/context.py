@@ -12,7 +12,7 @@ from quant_strategy.core.models import IndicatorSet, Position, Signal, TradeDire
 class StrategyContextBuilder:
     """Track latest market snapshots per symbol and prepare AI payloads."""
 
-    def __init__(self, risk_cfg: RiskConfig | None = None) -> None:
+    def __init__(self, risk_cfg: Optional[RiskConfig] = None) -> None:
         self._latest_indicators: Dict[str, IndicatorSet] = {}
         self._latest_signals: Dict[str, Signal] = {}
         self._risk_cfg = risk_cfg

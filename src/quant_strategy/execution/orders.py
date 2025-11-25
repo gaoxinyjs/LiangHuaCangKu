@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import Optional
 
 from quant_strategy.core.config import RiskConfig
 from quant_strategy.core.models import Position, Signal, TradeDirection
@@ -15,7 +16,7 @@ class OrderPlanner:
         self._risk = risk_cfg
 
     def create_position(
-        self, signal: Signal, account_equity: float, price: float, volatility: float | None = None
+        self, signal: Signal, account_equity: float, price: float, volatility: Optional[float] = None
     ) -> Position:
         size = account_equity * signal.confidence * self._risk.leverage / price
 
@@ -39,7 +40,7 @@ class OrderPlanner:
         pct: float,
         direction: TradeDirection,
         is_take_profit: bool,
-        volatility: float | None,
+        volatility: Optional[float],
     ) -> float:
         if self._risk.use_atr_targets and volatility:
             modifier = (
