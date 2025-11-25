@@ -2,15 +2,57 @@
 
 from __future__ import annotations
 
+from typing import Any, Mapping
+
 from rich.console import Console
+from rich.panel import Panel
 from rich.table import Table
 
 from quant_strategy.core.models import AiEvaluation, Position, Signal
 
 
 class StrategyLogger:
+    _LEVEL_STYLES = {
+        "info": "cyan",
+        "success": "green",
+        "warning": "yellow",
+        "error": "red",
+    }
+
     def __init__(self) -> None:
         self._console = Console()
+
+    def log_event(
+        self,
+        message: str,
+        *,
+        level: str = "info",
+        details: Mapping[str, Any] | None = None,
+    ) -> None:
+        """Render a short status message (optionally with structured details)."""
+        style = self._LEVEL_STYLES.get(level, "white")
+        if details:
+            table = Table.grid(expand=True)
+            table.add_column(justify="right", style="bold")
+            table.add_column(ratio=1)
+            for key, value in details.items():
+                table.add_row(str(key), str(value))
+            panel = Panel(table, title=f"[bold]{message}", border_style=style)
+            self._console.print(panel)
+            return
+        self._console.print(f"[bold {style}]{message}[/bold {style}]")
+
+    def info(self, message: str, *, details: Mapping[str, Any] | None = None) -> None:
+        self.log_event(message, level="info", details=details)
+
+    def success(self, message: str, *, details: Mapping[str, Any] | None = None) -> None:
+        self.log_event(message, level="success", details=details)
+
+    def warning(self, message: str, *, details: Mapping[str, Any] | None = None) -> None:
+        self.log_event(message, level="warning", details=details)
+
+    def error(self, message: str, *, details: Mapping[str, Any] | None = None) -> None:
+        self.log_event(message, level="error", details=details)
 
     def log_signal(self, signal: Signal) -> None:
         table = Table(title=f"Signal {signal.symbol}", show_lines=True)
