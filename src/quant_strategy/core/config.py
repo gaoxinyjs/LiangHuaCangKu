@@ -58,6 +58,7 @@ class RiskConfig(BaseModel):
     use_atr_targets: bool = True
     atr_take_profit_multiplier: float = 1.5
     atr_stop_loss_multiplier: float = 1.0
+    risk_per_trade_pct: float = 0.01
 
 
  class SchedulerConfig(BaseModel):

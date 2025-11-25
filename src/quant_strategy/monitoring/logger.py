@@ -44,3 +44,10 @@ class StrategyLogger:
         table.add_row("Risk", evaluation.risk_level)
         table.add_row("Reason", evaluation.reason)
         self._console.print(table)
+
+    def log_force_close(self, symbol: str, reason: str) -> None:
+        table = Table(title=f"Force Close {symbol}", show_lines=True)
+        table.add_column("Field")
+        table.add_column("Value")
+        table.add_row("Reason", reason)
+        self._console.print(table)

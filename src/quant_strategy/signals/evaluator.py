@@ -35,6 +35,8 @@ class SignalEvaluator:
                         "atr": indicator.atr or 0.0,
                         "score": raw_score,
                         "volatility_pct": volatility_pct,
+                        "close": indicator.close,
+                        "interval": indicator.interval,
                     },
                 )
             )

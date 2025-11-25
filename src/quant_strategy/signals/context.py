@@ -23,6 +23,10 @@ class StrategyContextBuilder:
         if signal:
             self._latest_signals[indicator.symbol] = signal
 
+    def get_latest_indicator(self, symbol: str) -> Optional[IndicatorSet]:
+        """Return the most recent indicator snapshot for a symbol."""
+        return self._latest_indicators.get(symbol)
+
     def build_ai_payload(self, position: Position) -> Dict[str, Any]:
         """Construct the DeepSeek payload with position and market context."""
         now = datetime.now(tz=timezone.utc)
