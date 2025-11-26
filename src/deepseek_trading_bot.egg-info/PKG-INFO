@@ -1,0 +1,8 @@
+Metadata-Version: 2.4
+Name: deepseek-trading-bot
+Version: 0.1.0
+Summary: Modular AI-assisted crypto trading orchestrator
+Author: Deepseek Strategy Team
+Requires-Python: >=3.10
+Requires-Dist: pandas>=2.0.0
+Provides-Extra: dev
