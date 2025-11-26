@@ -29,4 +29,5 @@ class TradeIntent:
     size: float | None = None
     take_profit: float | None = None
     stop_loss: float | None = None
+    slippage_tolerance_bps: float | None = None
     reason: str = ""

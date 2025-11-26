@@ -32,6 +32,8 @@ class RiskConfig:
     stop_loss_pct: float = 0.03
     confidence_bands: Sequence[float] = (0.2, 0.4, 0.6, 0.8)
     position_sizes: Sequence[float] = (0.05, 0.08, 0.10, 0.12, 0.15)
+    taker_fee_rate: float = 0.0004
+    default_slippage_bps: float = 5.0
 
 
 @dataclass(slots=True)
@@ -40,6 +42,8 @@ class SchedulingConfig:
     position_poll_seconds: int = 60
     force_close_buffer_minutes: int = 15
     session_end: time = time(23, 45)
+    retry_backoff_seconds: int = 30
+    retry_backoff_max_seconds: int = 300
 
 
 @dataclass(slots=True)

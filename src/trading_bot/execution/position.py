@@ -14,6 +14,7 @@ class Position:
     opened_at: datetime
     take_profit: float
     stop_loss: float
+    fees_paid: float = 0.0
 
     def unrealized_pnl(self, mark_price: float) -> float:
         sign = 1 if self.direction == "long" else -1

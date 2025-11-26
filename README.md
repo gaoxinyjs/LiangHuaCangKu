@@ -8,8 +8,8 @@
 - **指标引擎**：计算 MA、EMA、MACD、RSI、量价信息以及波动率指标。
 - **DeepSeek AI 模块**：封装成 `AISignalProvider`，当前内置随机 Stub，便于后续接入真实推理服务。
 - **策略模块**：`DeepSeekHybridStrategy` 结合指标趋势、RSI、AI 置信度与支撑/阻力信息，生成开平仓意图，同时按置信度映射五档仓位。
-- **执行与风控**：`PortfolioExecutor` 负责“有仓先平”的规则、止盈止损、强制平仓判定以及盈亏统计。
-- **调度器**：`TradingOrchestrator` 将 15 分钟行情循环与每分钟仓位巡检完全拆分，满足“开仓→每分钟复核→最后 15 分钟强平”的要求。
+- **执行与风控**：`PortfolioExecutor` 负责“有仓先平”的规则、止盈止损、强制平仓判定以及盈亏统计，并记录订单 ID、滑点与手续费。
+- **调度器**：`TradingOrchestrator` 将 15 分钟行情循环与每分钟仓位巡检完全拆分，内置指数退避重试，满足“开仓→每分钟复核→最后 15 分钟强平”的要求。
 
 ## 快速开始
 
@@ -19,6 +19,21 @@ python -m trading_bot.main --minutes 0.2
 ```
 
 默认使用 `MockMarketDataProvider` 与 `DeepSeekStub` 生成随机行情/信号，用于演示模块串联流程。接入真实交易所与 DeepSeek 服务时，只需实现对应接口并在 `main.py` 中注入即可。
+
+### 配置加载
+
+- 通过 `--config config/app.toml` 或 `--config config/app.json` 注入自定义参数。
+- 支持环境变量覆盖关键字段：`BOT_SYMBOL`、`BOT_LEVERAGE`、`BOT_TAKE_PROFIT`、`BOT_STOP_LOSS`。
+- 配置示例（TOML）：
+  ```toml
+  [data]
+  symbol = "ETHUSDT"
+
+  [risk]
+  leverage = 8
+  taker_fee_rate = 0.0005
+  default_slippage_bps = 7
+  ```
 
 ## 目录结构
 

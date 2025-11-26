@@ -5,4 +5,5 @@ Summary: Modular AI-assisted crypto trading orchestrator
 Author: Deepseek Strategy Team
 Requires-Python: >=3.10
 Requires-Dist: pandas>=2.0.0
+Requires-Dist: tomli>=2.0.1; python_version < "3.11"
 Provides-Extra: dev

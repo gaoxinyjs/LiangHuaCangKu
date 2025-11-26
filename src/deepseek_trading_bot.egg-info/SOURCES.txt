@@ -12,6 +12,7 @@ src/trading_bot/ai/base.py
 src/trading_bot/ai/deepseek_stub.py
 src/trading_bot/ai/models.py
 src/trading_bot/config/__init__.py
+src/trading_bot/config/loader.py
 src/trading_bot/config/models.py
 src/trading_bot/data/__init__.py
 src/trading_bot/data/models.py

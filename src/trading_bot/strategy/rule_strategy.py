@@ -54,14 +54,27 @@ class DeepSeekHybridStrategy(TradingStrategy):
         toggles = self._config.toggles
         ai = context.ai_signal
 
+        default_slippage = self._config.risk.default_slippage_bps
         if self._should_force_exit(ai, pnl, hold_minutes, toggles.hold_min_minutes):
-            return TradeIntent(action="close", reason="AI reversal risk or rule breach")
+            return TradeIntent(
+                action="close",
+                slippage_tolerance_bps=default_slippage,
+                reason="AI reversal risk or rule breach",
+            )
 
         if pnl >= 0 and ai.reversal_risk > 0.6:
-            return TradeIntent(action="close", reason="Protect profit before reversal")
+            return TradeIntent(
+                action="close",
+                slippage_tolerance_bps=default_slippage,
+                reason="Protect profit before reversal",
+            )
 
         if pnl < 0 and ai.direction_confidence < 0.3:
-            return TradeIntent(action="close", reason="Low confidence on recovery")
+            return TradeIntent(
+                action="close",
+                slippage_tolerance_bps=default_slippage,
+                reason="Low confidence on recovery",
+            )
 
         return TradeIntent(action="hold", reason="Holding per strategy rules")
 
@@ -101,6 +114,7 @@ class DeepSeekHybridStrategy(TradingStrategy):
             size=size,
             take_profit=take_profit,
             stop_loss=stop_loss,
+            slippage_tolerance_bps=self._config.risk.default_slippage_bps,
             reason=reason,
         )
 

@@ -5,7 +5,8 @@ import asyncio
 import logging
 
 from trading_bot.ai.deepseek_stub import DeepSeekStub
-from trading_bot.config.models import AppConfig, default_config
+from trading_bot.config.loader import load_config
+from trading_bot.config.models import AppConfig
 from trading_bot.data.providers import MockMarketDataProvider, SystemTimeProvider
 from trading_bot.execution.executor import PortfolioExecutor
 from trading_bot.indicators.engine import IndicatorEngine
@@ -50,12 +51,18 @@ def parse_args() -> argparse.Namespace:
         default=1.0,
         help="Run duration in minutes for demo purposes",
     )
+    parser.add_argument(
+        "--config",
+        type=str,
+        default=None,
+        help="Path to a TOML/JSON config file",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    config = default_config()
+    config = load_config(args.config)
     asyncio.run(run_app(config, run_minutes=args.minutes))
 
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime
-from typing import Iterable, Sequence
+from typing import Sequence
 
 from trading_bot.ai.base import AISignalProvider
 from trading_bot.config.models import AppConfig, TimeframeConfig
@@ -70,21 +70,35 @@ class TradingOrchestrator:
 
     async def _data_cycle_loop(self) -> None:
         interval = self._config.scheduling.data_pull_minutes * 60
+        failures = 0
         while self._running:
             try:
                 await self.evaluate_market_cycle()
+                failures = 0
+                await asyncio.sleep(interval)
             except Exception as exc:
-                logger.exception("Data cycle failed: %s", exc)
-            await asyncio.sleep(interval)
+                failures += 1
+                delay = self._compute_backoff_delay(failures)
+                logger.exception(
+                    "Data cycle failed (%s) – retry in %ss", exc, delay
+                )
+                await asyncio.sleep(delay)
 
     async def _position_loop(self) -> None:
         interval = self._config.scheduling.position_poll_seconds
+        failures = 0
         while self._running:
             try:
                 await self.evaluate_active_position()
+                failures = 0
+                await asyncio.sleep(interval)
             except Exception as exc:
-                logger.exception("Position loop failed: %s", exc)
-            await asyncio.sleep(interval)
+                failures += 1
+                delay = self._compute_backoff_delay(failures)
+                logger.exception(
+                    "Position loop failed (%s) – retry in %ss", exc, delay
+                )
+                await asyncio.sleep(delay)
 
     async def evaluate_market_cycle(self) -> ExecutionReport | None:
         snapshots = await self._fetch_all_timeframes(self._config.data.timeframes)
@@ -99,6 +113,8 @@ class TradingOrchestrator:
             mark_price=mark_price,
         )
         intent = self._strategy.decide(context)
+        if intent.action == "close" and intent.slippage_tolerance_bps is None:
+            intent.slippage_tolerance_bps = self._config.risk.default_slippage_bps
         report = self._executor.execute(intent, timestamp=self._time.now())
         if report.action != "hold":
             logger.info("Execution: %s | %s", report.action, report.message)
@@ -119,6 +135,7 @@ class TradingOrchestrator:
             intent = TradeIntent(
                 action="close",
                 entry_price=mark_price,
+                slippage_tolerance_bps=self._config.risk.default_slippage_bps,
                 reason="Force close window",
             )
             return self._executor.execute(intent, timestamp=self._time.now())
@@ -133,6 +150,8 @@ class TradingOrchestrator:
         intent = self._strategy.decide(context)
         if intent.action == "close":
             intent.entry_price = mark_price
+            if intent.slippage_tolerance_bps is None:
+                intent.slippage_tolerance_bps = self._config.risk.default_slippage_bps
         report = self._executor.execute(intent, timestamp=self._time.now())
         if report.action != "hold":
             logger.info("Position monitor: %s | %s", report.action, report.message)
@@ -150,3 +169,9 @@ class TradingOrchestrator:
             )
             results.append(snapshot)
         return results
+
+    def _compute_backoff_delay(self, failures: int) -> float:
+        sched = self._config.scheduling
+        base = max(1, sched.retry_backoff_seconds)
+        delay = base * (2 ** max(0, failures - 1))
+        return float(min(delay, sched.retry_backoff_max_seconds))
