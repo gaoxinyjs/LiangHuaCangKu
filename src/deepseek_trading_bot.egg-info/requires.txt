@@ -1,0 +1,6 @@
+pandas>=2.0.0
+
+[:python_version < "3.11"]
+tomli>=2.0.1
+
+[dev]

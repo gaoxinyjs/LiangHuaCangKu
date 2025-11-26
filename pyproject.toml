@@ -1,0 +1,19 @@
+[project]
+name = "deepseek-trading-bot"
+version = "0.1.0"
+description = "Modular AI-assisted crypto trading orchestrator"
+requires-python = ">=3.10"
+authors = [
+  { name = "Deepseek Strategy Team" }
+]
+dependencies = [
+  "pandas>=2.0.0",
+  'tomli>=2.0.1; python_version < "3.11"',
+]
+
+[project.optional-dependencies]
+dev = []
+
+[build-system]
+requires = ["setuptools>=67"]
+build-backend = "setuptools.build_meta"
